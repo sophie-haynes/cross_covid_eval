@@ -259,7 +259,7 @@ else:
         oversample(os.path.join(data_path,"train","covid"),os.path.join(data_path,"train","non"), sample_ratio=1)
     if class_weight:
         # calculate weights
-        class_weight_value = calculate_weights(path_to_train_covid,path_to_train_non)
+        class_weight_value = calculate_weights(os.path.join(data_path,"train","covid"),os.path.join(data_path,"train","non"))
     else:
         class_weight_value=None
 
