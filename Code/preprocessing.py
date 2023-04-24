@@ -266,7 +266,7 @@ def get_train_test_paths_labels(path_to_data):
 
 def load_data(partition_data_path, img_res, histogram_equalise):
     data = []
-    labels = []
+    true_labels = []
     img_paths = []
 
     labels = [d for d in next(os.walk(partition_data_path))[1]]
@@ -289,6 +289,8 @@ def load_data(partition_data_path, img_res, histogram_equalise):
             img_arr = cv2.resize(img_arr,(img_res,img_res))
             img_arr = img_arr/255.0 # normalise
             data.append(img_arr)
-            labels.append(labelint)
+            true_labels.append(labelint)
             img_paths.append(img)
-    return np.array(data),np.array(labels),np.array(img_paths)
+    return np.array(data),np.array(true_labels),np.array(img_paths)
+
+        
