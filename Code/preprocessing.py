@@ -82,9 +82,28 @@ def resize(img_arr, img_res):
     img_arr = cv2.resize(img_arr, (img_res, img_res))
     return img_arr
 
+def get_len_images(data_path):
+    len_images = 0
+    for ending in ['JPG','jpg', 'JPEG','jpeg','PNG', 'png']:
+        len_images += len(glob.glob(os.path.join(data_path,'*.{}'.format(ending))))
+    return len_images
+
+def get_all_images(data_path):
+    images_arr = []
+    for ending in ['JPG','jpg', 'JPEG','jpeg','PNG', 'png']:
+        images_arr =[*images_arr,*glob.glob(os.path.join(data_path,'*.{}'.format(ending)))]
+    return images_arr
+
 def calculate_weights(path_to_train_covid,path_to_train_non):
-    len_covid = len(glob.glob(os.path.join(path_to_train_covid,'*.*')))
-    len_non = len(glob.glob(os.path.join(path_to_train_non,'*.*')))
+    len_non = get_len_images(path_to_train_non)
+    len_covid = get_len_images(path_to_train_covid)
+
+    if(len_non)==0:
+        path_to_train_non = os.path.join(path_to_train_non,"*")
+        len_non = get_len_images(path_to_train_non)
+    if(len_covid)==0:
+        path_to_train_covid = os.path.join(path_to_train_covid,"*")
+        len_covid = get_len_images(path_to_train_covid)
 
     print("Number of COVID samples: {}".format(len_covid))
     print("Number of Non-COVID samples : {}".format(len_non))
@@ -99,22 +118,15 @@ def calculate_weights(path_to_train_covid,path_to_train_non):
     return class_weights 
 
 def oversample(path_to_train_covid,path_to_train_non, sample_ratio=1):
-    len_non = len(glob.glob(path_to_train_non+'*.[jp][pn]g'))
-    len_covid = len(glob.glob(path_to_train_covid+'*.[jp][pn]g'))
-    
+    len_non = get_len_images(path_to_train_non)
+    len_covid = get_len_images(path_to_train_covid)
 
-    # check if negative class contains multiple negative types
     if(len_non)==0:
-        # handle multi neg
-        # datasets only have one layer of children if class has sub-types, therefore hardcoding wildcard for one layer will work
-        path_to_train_non+="*/"
-        len_non = len(glob.glob(path_to_train_non+'*.[jp][pn]g'))
-    # check if positive class contains multiple positive types
+        path_to_train_non = os.path.join(path_to_train_non,"*")
+        len_non = get_len_images(path_to_train_non)
     if(len_covid)==0:
-        # handle multi pos
-        # datasets only have one layer of children if class has sub-types, therefore hardcoding wildcard for one layer will work
-        path_to_train_covid+="*/"
-        len_covid = len(glob.glob(path_to_train_covid+'*.[jp][pn]g'))
+        path_to_train_covid = os.path.join(path_to_train_covid,"*")
+        len_covid = get_len_images(path_to_train_covid)
 
 
     print("Number of COVID samples before oversample: {}".format(len_covid))
@@ -124,50 +136,50 @@ def oversample(path_to_train_covid,path_to_train_non, sample_ratio=1):
 
     i = 0
 
-    while (len(glob.glob(os.path.join(minority_class_path, "*.[jp][pn]g")))/len(glob.glob(os.path.join(majority_class_path, "*.[jp][pn]g"))))<1:
+    while (len(get_all_images(minority_class_path))/len(get_all_images(majority_class_path)))<1:
         i+=1
-        for file in glob.glob(os.path.join(minority_class_path, "*.[jp][pn]g")):
+        for file in get_all_images(minority_class_path):
             shutil.copy(file, os.path.join(minority_class_path, "dupl-{}_".format(i) + os.path.basename(file)))
 
-    print("Number of COVID samples after oversample: {}".format(len(glob.glob(path_to_train_covid+'*.[jp][pn]g'))))
-    print("Number of Non-COVID samples after oversample: {}".format(len(glob.glob(path_to_train_non+'*.[jp][pn]g'))))
+    print("Number of COVID samples after oversample: {}".format(len(get_len_images(path_to_train_covid))))
+    print("Number of Non-COVID samples after oversample: {}".format(len(get_len_images(path_to_train_non))))
 
 
-def split_into_train_test(path_to_data, train_sample_size=0.6,random_state=3):
-    from sklearn.model_selection import train_test_split
+# def split_into_train_test(path_to_data, train_sample_size=0.6,random_state=3):
+#     from sklearn.model_selection import train_test_split
 
-    labels = [d for d in next(os.walk(path_to_data))][1]
-    neg_folder = next(lab for lab in labels if lab.lower().startswith('n') == True)
-    pos_folder = next(lab for lab in labels if lab.lower().startswith('n') == False)
+#     labels = [d for d in next(os.walk(path_to_data))][1]
+#     neg_folder = next(lab for lab in labels if lab.lower().startswith('n') == True)
+#     pos_folder = next(lab for lab in labels if lab.lower().startswith('n') == False)
 
-    neg_path = path_to_data+"{}/".format(neg_folder)
-    pos_path = path_to_data+"{}/".format(pos_folder)
+#     neg_path = path_to_data+"{}/".format(neg_folder)
+#     pos_path = path_to_data+"{}/".format(pos_folder)
 
-    len_non = len(glob.glob(neg_path+'*.[jp][pn]g'))
-    len_covid = len(glob.glob(pos_path+'*.[jp][pn]g'))
+#     len_non = len(glob.glob(neg_path+'*.[jp][pn]g'))
+#     len_covid = len(glob.glob(pos_path+'*.[jp][pn]g'))
 
-    # check if negative class contains multiple negative types
-    if(len_non)==0:
-        # handle multi neg
-        # datasets only have one layer of children if class has sub-types, therefore hardcoding wildcard for one layer will work
-        neg_path+="*/"
-        len_non = len(glob.glob(neg_path+'*.[jp][pn]g'))
-    # check if positive class contains multiple positive types
-    if(len_covid)==0:
-        # handle multi pos
-        # datasets only have one layer of children if class has sub-types, therefore hardcoding wildcard for one layer will work
-        pos_path+="*/"
-        len_covid = len(glob.glob(pos_path+'*.[jp][pn]g'))
+#     # check if negative class contains multiple negative types
+#     if(len_non)==0:
+#         # handle multi neg
+#         # datasets only have one layer of children if class has sub-types, therefore hardcoding wildcard for one layer will work
+#         neg_path+="*/"
+#         len_non = len(glob.glob(neg_path+'*.[jp][pn]g'))
+#     # check if positive class contains multiple positive types
+#     if(len_covid)==0:
+#         # handle multi pos
+#         # datasets only have one layer of children if class has sub-types, therefore hardcoding wildcard for one layer will work
+#         pos_path+="*/"
+#         len_covid = len(glob.glob(pos_path+'*.[jp][pn]g'))
 
-    neg_labels = [0]*len_non
-    pos_labels = [1]*len_covid
-    all_labels =[*neg_labels,*pos_labels]
-    all_paths = [*glob.glob(neg_path+'*.[jp][pn]g'),*glob.glob(pos_path+'*.[jp][pn]g')]
-    train_paths, test_paths, train_labels, test_labels = train_test_split(all_paths, all_labels, 
-                                                                        test_size=1-train_sample_size, 
-                                                                        stratify=all_labels, 
-                                                                        random_state=random_state)
-    return train_paths, test_paths, train_labels, test_labels
+#     neg_labels = [0]*len_non
+#     pos_labels = [1]*len_covid
+#     all_labels =[*neg_labels,*pos_labels]
+#     all_paths = [*glob.glob(neg_path+'*.[jp][pn]g'),*glob.glob(pos_path+'*.[jp][pn]g')]
+#     train_paths, test_paths, train_labels, test_labels = train_test_split(all_paths, all_labels, 
+#                                                                         test_size=1-train_sample_size, 
+#                                                                         stratify=all_labels, 
+#                                                                         random_state=random_state)
+#     return train_paths, test_paths, train_labels, test_labels
 
 def find_root_folder(passpath):
   # check if train/test
