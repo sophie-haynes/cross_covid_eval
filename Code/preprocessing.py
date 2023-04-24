@@ -271,7 +271,7 @@ def load_data(partition_data_path, img_res, histogram_equalise):
 
     labels = [d for d in next(os.walk(partition_data_path))[1]]
 
-    for label in labellist:
+    for label in labels:
         if label == "non":
             labelint = 0
         else:
@@ -292,5 +292,3 @@ def load_data(partition_data_path, img_res, histogram_equalise):
             labels.append(labelint)
             img_paths.append(img)
     return np.array(data),np.array(labels),np.array(img_paths)
-
-        
