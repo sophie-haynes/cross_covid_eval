@@ -83,8 +83,8 @@ def resize(img_arr, img_res):
     return img_arr
 
 def calculate_weights(path_to_train_covid,path_to_train_non):
-    len_covid = len(glob.glob(path_to_train_covid+'*.*'))
-    len_non = len(glob.glob(path_to_train_non+'*.*'))
+    len_covid = len(glob.glob(os.path.join(path_to_train_covid,'*.*')))
+    len_non = len(glob.glob(os.path.join(path_to_train_non,'*.*')))
 
     print("Number of COVID samples: {}".format(len_covid))
     print("Number of Non-COVID samples : {}".format(len_non))
