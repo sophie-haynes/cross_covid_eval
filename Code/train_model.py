@@ -94,11 +94,10 @@ def fetch_data(train_dataset,train_data_path):
     else:
         raise ValueError('Train data file type not recognized. Please use .zip or .tar files.')
     print('Data fetched and extracted successfully.')
- 
-# ========================================================================================================
 
+# ========================================================================================================
 # Set up base parameters
-parser = argparse.ArgumentParser(description='CLI tool for training models on specific datasets')
+parser = argparse.ArgumentParser(description='Description of your program')
 parser.add_argument('-a', '--architecture', help='Architecture: \\Must be of type "densenet", "conv4", "darkcovidnet" or "minaee_resnet".', required=True)
 parser.add_argument('-res', '--img_res', help='Image resolution', default=224, type=int)
 parser.add_argument('-lr', '--learning_rate', help='Learning rate', default=0.001, type=float)
@@ -256,9 +255,11 @@ else:
 
     # load data into env
     if oversample:
-        # create oversampled data
+        # create oversampled data - a sample ratio of 1 => 1(minority):1(majority), sample ratio of 2 => 1(minority):2(majority)
+        oversample(os.path.join(data_path,"train","covid"),os.path.join(data_path,"train","non"), sample_ratio=1)
     if class_weight:
         # calculate weights
+        class_weight_value = calculate_weights(path_to_train_covid,path_to_train_non)
 
     train_x, train_y, train_paths = load_data(os.path.join(data_path,"train"),img_res,hist_eq)
     test_x,test_y, test_paths = load_data(os.path.join(data_path,"test"),img_res,hist_eq)
