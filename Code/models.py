@@ -1,6 +1,7 @@
 # "densenet", "conv4", "darkcovidnet" or "minaee_resnet"
 
 def conv4_tf(img_res,learning_rate, momentum):
+	import tensorflow as tf
 	from tensorflow import keras
 	from keras import layers
 	from keras import models
