@@ -97,13 +97,13 @@ def fetch_data(train_dataset,train_data_path):
 
 
 def run_experiment(architecture, img_res=224,learning_rate=0.001,momentum=0.9,epochs=50,batch_size=32,weights=None,ds1=False, dataset1=False, dataset2=False, dataset3=False, dataset4=False,class_weight=False,oversample=False,hist_eq=False):
-    if args.dataset1:
+    if dataset1:
         train_dataset = "1"
-    elif args.dataset2:
+    elif dataset2:
         train_dataset = "2"
-    elif args.dataset3:
+    elif dataset3:
         train_dataset = "3"
-    elif args.dataset4:
+    elif dataset4:
         train_dataset = "4"
     else:
         raise ValueError("No train dataset selected")
