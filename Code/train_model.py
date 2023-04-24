@@ -94,25 +94,11 @@ def fetch_data(train_dataset,train_data_path):
     else:
         raise ValueError('Train data file type not recognized. Please use .zip or .tar files.')
     print('Data fetched and extracted successfully.')
-
-def get_neg_pos_class_paths(path_to_data):
-    labels = [d for d in next(os.walk(train_path))[1]]
-    neg_path =  os.path.join(path_to_data,os.next(lab for lab in labels if lab.lower().startswith('n') == True))
-    pos_path = os.path.join(path_to_data,next(lab for lab in labels if lab.lower().startswith('n') == False))
-    return neg_path, pos_path
-
-
-def write_model_meta_to_csv():
-    try:
-        with open("test.csv","a") as f:
-            writer = csv.writer(f,delimiter=',')
-            writer.writerow(['architecture','train_dataset','img_res','lr', 'momentum','epochs','batch_size','weights',\
-                'class_weight','oversample','hist_eq'])
-
+ 
 # ========================================================================================================
 
 # Set up base parameters
-parser = argparse.ArgumentParser(description='Description of your program')
+parser = argparse.ArgumentParser(description='CLI tool for training models on specific datasets')
 parser.add_argument('-a', '--architecture', help='Architecture: \\Must be of type "densenet", "conv4", "darkcovidnet" or "minaee_resnet".', required=True)
 parser.add_argument('-res', '--img_res', help='Image resolution', default=224, type=int)
 parser.add_argument('-lr', '--learning_rate', help='Learning rate', default=0.001, type=float)
