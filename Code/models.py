@@ -49,14 +49,13 @@ def densenet_tf(img_res,learning_rate, momentum,weights):
 		import os
 
 		# check if this file is already loaded
-		if not os.path.isfile("h5_weights.h5"):
+		if not os.path.isfile("cxr-8_dense_weights.h5"):
 			# create weights file 
-			transfer_model = keras.models.load_model("/content/drive/MyDrive/Paper2Logging/models/ultra_finetune_Binary_CXR8_Transfer_Hist_50_1")
-			transfer_model.save("h5_weights.h5")
+			shutil.copy("/content/drive/MyDrive/Datasets/cxr-8_dense_weights.h5","cxr-8_dense_weights.h5")
 
 		base_model = keras.applications.DenseNet121(weights=None, input_shape=(img_res,img_res,3), include_top=False)
 		# load manual weights from pretraining
-		base_model.load_weights("h5_weights.h5", by_name=True)
+		base_model.load_weights("cxr-8_dense_weights.h5", by_name=True)
 		base_model.trainable = False
 		inputs = keras.Input(shape=(img_res, img_res, 3))
 		x = base_model(inputs, training=False)
