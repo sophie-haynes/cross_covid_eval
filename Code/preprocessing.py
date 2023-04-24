@@ -264,33 +264,33 @@ def get_train_test_paths_labels(path_to_data):
 
     return train_all_paths, test_all_paths, train_all_labels, test_all_labels
 
-    def load_data(partition_data_path, img_res, histogram_equalise):
-        data = []
-        labels = []
-        img_paths = []
+def load_data(partition_data_path, img_res, histogram_equalise):
+    data = []
+    labels = []
+    img_paths = []
 
-        labels = [d for d in next(os.walk(partition_data_path))[1]]
+    labels = [d for d in next(os.walk(partition_data_path))[1]]
 
-        for label in labellist:
-            if label == "non":
-                labelint = 0
-            else:
-                labelint = 1
-            image_list = glob.glob('{}/{}/*'.format(partition_data_path,label))
+    for label in labellist:
+        if label == "non":
+            labelint = 0
+        else:
+            labelint = 1
+        image_list = glob.glob('{}/{}/*'.format(partition_data_path,label))
 
-            for img in image_list:
-                img_arr = cv2.imread(img)
-                if histogram_equalise:
-                    b,g,r = cv2.split(img_arr)
-                    beq = cv2.equalizeHist(b)
-                    geq = cv2.equalizeHist(g)
-                    req = cv2.equalizeHist(r)
-                    img_arr = cv2.merge((beq,geq,req))
-                img_arr = cv2.resize(img_arr,(img_res,img_res))
-                img_arr = img_arr/255.0 # normalise
-                data.append(img_arr)
-                labels.append(labelint)
-                img_paths.append(img)
-        return np.array(data),np.array(labels),np.array(img_paths)
+        for img in image_list:
+            img_arr = cv2.imread(img)
+            if histogram_equalise:
+                b,g,r = cv2.split(img_arr)
+                beq = cv2.equalizeHist(b)
+                geq = cv2.equalizeHist(g)
+                req = cv2.equalizeHist(r)
+                img_arr = cv2.merge((beq,geq,req))
+            img_arr = cv2.resize(img_arr,(img_res,img_res))
+            img_arr = img_arr/255.0 # normalise
+            data.append(img_arr)
+            labels.append(labelint)
+            img_paths.append(img)
+    return np.array(data),np.array(labels),np.array(img_paths)
 
         
