@@ -260,6 +260,8 @@ else:
     if class_weight:
         # calculate weights
         class_weight_value = calculate_weights(path_to_train_covid,path_to_train_non)
+    else:
+        class_weight_value=None
 
     train_x, train_y, train_paths = load_data(os.path.join(data_path,"train"),img_res,hist_eq)
     test_x,test_y, test_paths = load_data(os.path.join(data_path,"test"),img_res,hist_eq)
