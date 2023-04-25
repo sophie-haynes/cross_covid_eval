@@ -31,6 +31,7 @@ def densenet_tf(img_res,learning_rate, momentum,weights):
 	from keras import models
 	from keras.callbacks import EarlyStopping
 	from tensorflow.keras.preprocessing import image_dataset_from_directory
+	import shutil
 
 	if weights=="imagenet":
 		base_model = keras.applications.DenseNet121(weights='imagenet', input_shape=(img_res,img_res,3), include_top=False)
