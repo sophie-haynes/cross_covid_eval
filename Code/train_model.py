@@ -19,7 +19,7 @@ from sklearn.metrics import auc
 from sklearn.metrics import ConfusionMatrixDisplay
 from sklearn.metrics import confusion_matrix
 
-from preprocessing import calculate_weights,load_data, oversample
+from preprocessing import calculate_weights,load_data, oversample_data
 
 # ===== TO-DO ============================
 # 
@@ -256,7 +256,10 @@ else:
     # load data into env
     if oversample:
         # create oversampled data - a sample ratio of 1 => 1(minority):1(majority), sample ratio of 2 => 1(minority):2(majority)
-        oversample(os.path.join(data_path,"train","covid"),os.path.join(data_path,"train","non"), sample_ratio=1)
+        oversample_data(\
+            os.path.join(data_path,"train","covid"),\
+            os.path.join(data_path,"train","non"), \
+            sample_ratio=1)
     if class_weight:
         # calculate weights
         class_weight_value = calculate_weights(os.path.join(data_path,"train","covid"),os.path.join(data_path,"train","non"))

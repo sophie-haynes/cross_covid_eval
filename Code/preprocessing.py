@@ -117,7 +117,7 @@ def calculate_weights(path_to_train_covid,path_to_train_non):
     class_weights = {0:weight_normal, 1: weight_positive}
     return class_weights 
 
-def oversample(path_to_train_covid,path_to_train_non, sample_ratio=1):
+def oversample_data(path_to_train_covid,path_to_train_non, sample_ratio=1):
     len_non = get_len_images(path_to_train_non)
     len_covid = get_len_images(path_to_train_covid)
 
