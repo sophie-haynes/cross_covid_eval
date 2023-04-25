@@ -141,8 +141,8 @@ def oversample_data(path_to_train_covid,path_to_train_non, sample_ratio=1):
         for file in get_all_images(minority_class_path):
             shutil.copy(file, os.path.join(minority_class_path, "dupl-{}_".format(i) + os.path.basename(file)))
 
-    print("Number of COVID samples after oversample: {}".format(len(get_len_images(path_to_train_covid))))
-    print("Number of Non-COVID samples after oversample: {}".format(len(get_len_images(path_to_train_non))))
+    print("Number of COVID samples after oversample: {}".format(get_len_images(path_to_train_covid)))
+    print("Number of Non-COVID samples after oversample: {}".format(get_len_images(path_to_train_non)))
 
 
 # def split_into_train_test(path_to_data, train_sample_size=0.6,random_state=3):
