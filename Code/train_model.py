@@ -189,7 +189,7 @@ fetch_data(train_dataset,set_train_data_path(train_dataset,temp_flatten))
 #     train_non_path, train_covid_path = get_neg_pos_class_paths(train_path)
 #     oversample(path_to_train_covid,path_to_train_non, sample_ratio=1)
 data_path = "dataset_{}".format(train_dataset)
-model_name += "ds_{}".format(train_dataset)
+
 # ========================================================================================================
 # modelling 
 
