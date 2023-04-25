@@ -189,6 +189,7 @@ fetch_data(train_dataset,set_train_data_path(train_dataset,temp_flatten))
 #     train_non_path, train_covid_path = get_neg_pos_class_paths(train_path)
 #     oversample(path_to_train_covid,path_to_train_non, sample_ratio=1)
 data_path = "dataset_{}".format(train_dataset)
+model_name += "ds_{}".format(train_dataset)
 # ========================================================================================================
 # modelling 
 
@@ -271,6 +272,8 @@ else:
     
     # Create folder for model/result storage
     os.makedirs("/content/drive/MyDrive/Paper3Logging/Models/{}".format(model_name), exist_ok=True)
+    # create dataset subfolder
+    os.makedirs("/content/drive/MyDrive/Paper3Logging/Models/{}/{}".format(model_name,data_path), exist_ok=True)
     # create preds folder
     # os.makedirs("/content/drive/MyDrive/Paper3Logging/Models/{}/Predictions".format(model_name), exist_ok=True)
 
@@ -288,8 +291,8 @@ else:
             model.fit(train_x,train_y, validation_data=(test_x,test_y), epochs=epochs, batch_size=batch_size, callbacks=[es],class_weight=class_weight_value)
         else:
             model.fit(train_x,train_y, validation_data=(test_x,test_y), epochs=epochs, batch_size=batch_size, callbacks=[es])
-        model.save("drive/MyDrive/Paper3Logging/Models/{}/{}_{}.h5".format(model_name,model_name, i+1))
-        print("drive/MyDrive/Paper3Logging/Models/{}/{}_{}.h5".format(model_name,model_name, i+1))
+        model.save("drive/MyDrive/Paper3Logging/Models/{}/{}/{}_{}.h5".format(model_name,data_path,model_name, i+1))
+        print("drive/MyDrive/Paper3Logging/Models/{}/{}/{}_{}.h5".format(model_name,data_path,model_name, i+1))
 
         # export metadata
         if os.path.isfile("/content/drive/MyDrive/Paper3Logging/Models/models_meta.csv"):
