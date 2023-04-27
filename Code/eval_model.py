@@ -119,7 +119,7 @@ def getSensitivityThresh(targetSensitivity, covidProb,normalProb,sens98=0):
 # Set up base parameters
 parser = argparse.ArgumentParser(description='Evaluation tool')
 
-parser.add_argument('-mod', '--model_name', help='Model Name: ', required=True)
+parser.add_argument('-mod', '--model_path', help='Model Name: ', required=True)
 parser.add_argument('-res', '--img_res', help='Image resolution', default=224, type=int)
 
 parser.add_argument('-b', '--batch_size', help='Batch size', default=32, type=int)
@@ -277,4 +277,4 @@ for ds in eval_datasets:
             sheet = wb['Dataset{}'.format(ds)]
             sheet.append([model_name,"INTERNAL" if trained_on_dataset==ds else "EXTERNAL",auc,sensitivity,specificity,precision])
             wb.save(filename=wb_path)
-        
+
