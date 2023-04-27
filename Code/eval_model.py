@@ -245,6 +245,7 @@ else:
             # calc j stat for optimal thresh https://machinelearningmastery.com/threshold-moving-for-imbalanced-classification/
             print("External Evaluation")
             thresh = thresholds[np.argmax(tpr - fpr)]
+            print("Threshold = %.3f" %(thresh))
         
         cm = confusion_matrix(data_df['Labels'],data_df['Pred{}'.format(model_number)].apply(lambda x: 0 if x<=thresh else 1))
 
@@ -276,7 +277,7 @@ else:
                 sheet3 = wb.create_sheet(title="Dataset3")
                 sheet4 = wb.create_sheet(title="Dataset4")
                 headers = ["Model_Name","Eval_Type","AUC","Sensitivity",\
-                "Specificity","Precision"]
+                "Specificity","Precision", "Threshold"]
                 sheet1.append(headers)
                 sheet2.append(headers)
                 sheet3.append(headers)
@@ -284,6 +285,6 @@ else:
             # get sheet to update
             sheet = wb['Dataset{}'.format(ds)]
             eval_type = "INTERNAL" if trained_on_dataset==ds else "EXTERNAL"
-            sheet.append([model_name, eval_type, model_auc, sensitivity, specificity, precision])
+            sheet.append([model_name, eval_type, model_auc, sensitivity, specificity, precision, thresh])
             wb.save(filename=wb_path)
 
