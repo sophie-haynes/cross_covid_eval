@@ -283,6 +283,7 @@ else:
                 sheet4.append(headers)
             # get sheet to update
             sheet = wb['Dataset{}'.format(ds)]
-            sheet.append([model_name,"INTERNAL" if trained_on_dataset==ds else "EXTERNAL",auc,sensitivity,specificity,precision])
+            eval_type = "INTERNAL" if trained_on_dataset==ds else "EXTERNAL"
+            sheet.append([model_name, eval_type, auc, sensitivity, specificity, precision])
             wb.save(filename=wb_path)
 
