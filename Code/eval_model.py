@@ -153,6 +153,7 @@ model_path = args.model_path
 img_res = args.img_res
 batch_size = args.batch_size
 augmented = False
+no_export = args.no_export
 
 # ========================================================================================================
 # TEMP
@@ -253,26 +254,27 @@ for ds in eval_datasets:
         print("Model AUC: {}".format(model_auc))
         print("Sens: {:.1f}% \nSpec: {:.1f}% \nPrec: {:.1f}%".format(\
             sensitivity*100,specificity*100,precision*100))
-
-        # export results
-        wb_path = "drive/MyDrive/Paper3Logging/Models/Results.xlsx"
-        if os.path.isfile(wb_path):
-            # load workbook
-            wb = load_workbook(wb_path)
-        else:
-            # create workbook
-            sheet1 = wb.active
-            sheet1.title = "Dataset1"
-            sheet2 = wb.create_sheet(title="Dataset2")
-            sheet3 = wb.create_sheet(title="Dataset3")
-            sheet4 = wb.create_sheet(title="Dataset4")
-            headers = ["Model_Name","Eval_Type","AUC","Sensitivity",\
-            "Specificity","Precision"]
-            sheet1.append(headers)
-            sheet2.append(headers)
-            sheet3.append(headers)
-            sheet4.append(headers)
-        # get sheet to update
-        sheet = wb['Dataset{}'.format(ds)]
-        sheet.append([model_name,"INTERNAL" if trained_on_dataset==ds else "EXTERNAL",auc,sensitivity,specificity,precision])
-        wb.save(filename=wb_path)
+        if not no_export:
+            # export results
+            wb_path = "drive/MyDrive/Paper3Logging/Models/Results.xlsx"
+            if os.path.isfile(wb_path):
+                # load workbook
+                wb = load_workbook(wb_path)
+            else:
+                # create workbook
+                sheet1 = wb.active
+                sheet1.title = "Dataset1"
+                sheet2 = wb.create_sheet(title="Dataset2")
+                sheet3 = wb.create_sheet(title="Dataset3")
+                sheet4 = wb.create_sheet(title="Dataset4")
+                headers = ["Model_Name","Eval_Type","AUC","Sensitivity",\
+                "Specificity","Precision"]
+                sheet1.append(headers)
+                sheet2.append(headers)
+                sheet3.append(headers)
+                sheet4.append(headers)
+            # get sheet to update
+            sheet = wb['Dataset{}'.format(ds)]
+            sheet.append([model_name,"INTERNAL" if trained_on_dataset==ds else "EXTERNAL",auc,sensitivity,specificity,precision])
+            wb.save(filename=wb_path)
+        
