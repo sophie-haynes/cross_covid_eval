@@ -165,116 +165,118 @@ model_name_dir = model_name.split(".h5")[0][:-2]
 
 trained_on_dataset = model_name_dir.split("_")[2]
 
-# load model
-model =keras.models.load_model(model_path)
 
-# fetch  data into environment
-for ds in eval_datasets:
-    # extract data locally
-    fetch_data(ds,set_test_data_path(ds,temp_flatten))
-    # local verison path
-    data_path = "dataset_{}".format(ds)
-    print("Evalating on {}".format(data_path))
-    # ========================================================================================================
+# ========================================================================================================
     # loading models 
 
-    if architecture == "darkcovidnet":
-        pass
-    elif architecture == "minaee-resnet":
-        pass
-    else:
-        # Use TensorFlow code
-        import tensorflow as tf
-        ## GLOBAL SEED ##                                                   
-        tf.random.set_seed(3)
+if architecture == "darkcovidnet":
+    pass
+elif architecture == "minaee-resnet":
+    pass
+else:
+    # Use TensorFlow code
+    import tensorflow as tf
+    ## GLOBAL SEED ##                                                   
+    tf.random.set_seed(3)
+    
+    from tensorflow import keras
+    from keras import layers
+    from keras import models
+
+    print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
+
+    # load model
+    model =keras.models.load_model(model_path)
+
+    # fetch  data into environment
+    for ds in eval_datasets:
+        # extract data locally
+        fetch_data(ds,set_test_data_path(ds,temp_flatten))
+        # local verison path
+        data_path = "dataset_{}".format(ds)
+        print("Evalating on {}".format(data_path))
         
-        from tensorflow import keras
-        from keras import layers
-        from keras import models
+            # check if model needs preprocessing (from name)
+            hist_eq = True if "_HE_" in model_name else False
 
-        print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
-
-        # check if model needs preprocessing (from name)
-        hist_eq = True if "_HE_" in model_name else False
-
-        # load in test data
-        test_x,test_y, test_paths = load_data(os.path.join(data_path,"test"),img_res,hist_eq)
-        
-        # eval dataset
-        preds = model.predict(test_x)
-
-        # Create folder for preds
-        preds_folder = os.path.join(model_path.split(model_name)[0],"Predictions")
-        os.makedirs(preds_folder, exist_ok=True)
-        # get model number for preds number
-        model_number =  model_name.split(".h5")[0][-1]
-        # dataset preds for this model on this dataset
-        data_pred_file = os.path.join(preds_folder,data_path+".csv")
-
-        if os.path.isfile(data_pred_file):
-          data_df = pd.read_csv(data_pred_file)
-          data_df['Pred{}'.format(model_number)] = preds.ravel()
-          data_df.to_csv(data_pred_file,index=False)
+            # load in test data
+            test_x,test_y, test_paths = load_data(os.path.join(data_path,"test"),img_res,hist_eq)
             
-        else:
-          # create new csv for storing model meta data
-          data_df = pd.DataFrame(columns=['Labels', 'Pred1', 'Pred2','Pred3'])
-          data_df['Labels'] = test_y
-          data_df['Pred{}'.format(model_number)] = preds.ravel()
-          data_df.to_csv(data_pred_file,index=False)
+            # eval dataset
+            preds = model.predict(test_x)
 
-        # calculate metrics
-        fpr,tpr,thresholds = roc_curve(data_df['Labels'],data_df['Pred{}'.format(model_number)],drop_intermediate=False)
-        model_auc = auc(fpr,tpr)
+            # Create folder for preds
+            preds_folder = os.path.join(model_path.split(model_name)[0],"Predictions")
+            os.makedirs(preds_folder, exist_ok=True)
+            # get model number for preds number
+            model_number =  model_name.split(".h5")[0][-1]
+            # dataset preds for this model on this dataset
+            data_pred_file = os.path.join(preds_folder,data_path+".csv")
 
-        # if internal eval, calc 98% metrics
-        if trained_on_dataset == ds:
-            # 98
-            print("Internal Evaluation")
-            covid_prob= data_df[data_df['Labels']==1]['Pred{}'.format(model_number)].array
-            non_prob= data_df[data_df['Labels']==0]['Pred{}'.format(model_number)].array
-            thresh = getSensitivityThresh(0.98,covid_prob, non_prob)
-        else:
-            # calc j stat for optimal thresh https://machinelearningmastery.com/threshold-moving-for-imbalanced-classification/
-            print("External Evaluation")
-            thresh = thresholds[np.argmax(tpr - fpr)]
-        
-        cm = confusion_matrix(data_df['Labels'],data_df['Pred{}'.format(model_number)].apply(lambda x: 0 if x<=thresh else 1))
-
-        TP = cm[1][1]
-        TN = cm[0][0]
-        FP = cm[0][1]
-        FN = cm[1][0]
-
-        precision = TP/(TP+FP)
-        prec_samp = TP+FP
-        sensitivity = TP/(TP+FN)
-        specificity = TN/(TN+FP)
-
-        print("Model AUC: {}".format(model_auc))
-        print("Sens: {:.1f}% \nSpec: {:.1f}% \nPrec: {:.1f}%".format(\
-            sensitivity*100,specificity*100,precision*100))
-        if not no_export:
-            # export results
-            wb_path = "drive/MyDrive/Paper3Logging/Models/Results.xlsx"
-            if os.path.isfile(wb_path):
-                # load workbook
-                wb = load_workbook(wb_path)
+            if os.path.isfile(data_pred_file):
+              data_df = pd.read_csv(data_pred_file)
+              data_df['Pred{}'.format(model_number)] = preds.ravel()
+              data_df.to_csv(data_pred_file,index=False)
+                
             else:
-                # create workbook
-                sheet1 = wb.active
-                sheet1.title = "Dataset1"
-                sheet2 = wb.create_sheet(title="Dataset2")
-                sheet3 = wb.create_sheet(title="Dataset3")
-                sheet4 = wb.create_sheet(title="Dataset4")
-                headers = ["Model_Name","Eval_Type","AUC","Sensitivity",\
-                "Specificity","Precision"]
-                sheet1.append(headers)
-                sheet2.append(headers)
-                sheet3.append(headers)
-                sheet4.append(headers)
-            # get sheet to update
-            sheet = wb['Dataset{}'.format(ds)]
-            sheet.append([model_name,"INTERNAL" if trained_on_dataset==ds else "EXTERNAL",auc,sensitivity,specificity,precision])
-            wb.save(filename=wb_path)
+              # create new csv for storing model meta data
+              data_df = pd.DataFrame(columns=['Labels', 'Pred1', 'Pred2','Pred3'])
+              data_df['Labels'] = test_y
+              data_df['Pred{}'.format(model_number)] = preds.ravel()
+              data_df.to_csv(data_pred_file,index=False)
+
+            # calculate metrics
+            fpr,tpr,thresholds = roc_curve(data_df['Labels'],data_df['Pred{}'.format(model_number)],drop_intermediate=False)
+            model_auc = auc(fpr,tpr)
+
+            # if internal eval, calc 98% metrics
+            if trained_on_dataset == ds:
+                # 98
+                print("Internal Evaluation")
+                covid_prob= data_df[data_df['Labels']==1]['Pred{}'.format(model_number)].array
+                non_prob= data_df[data_df['Labels']==0]['Pred{}'.format(model_number)].array
+                thresh = getSensitivityThresh(0.98,covid_prob, non_prob)
+            else:
+                # calc j stat for optimal thresh https://machinelearningmastery.com/threshold-moving-for-imbalanced-classification/
+                print("External Evaluation")
+                thresh = thresholds[np.argmax(tpr - fpr)]
+            
+            cm = confusion_matrix(data_df['Labels'],data_df['Pred{}'.format(model_number)].apply(lambda x: 0 if x<=thresh else 1))
+
+            TP = cm[1][1]
+            TN = cm[0][0]
+            FP = cm[0][1]
+            FN = cm[1][0]
+
+            precision = TP/(TP+FP)
+            prec_samp = TP+FP
+            sensitivity = TP/(TP+FN)
+            specificity = TN/(TN+FP)
+
+            print("Model AUC: {}".format(model_auc))
+            print("Sens: {:.1f}% \nSpec: {:.1f}% \nPrec: {:.1f}%".format(\
+                sensitivity*100,specificity*100,precision*100))
+            if not no_export:
+                # export results
+                wb_path = "drive/MyDrive/Paper3Logging/Models/Results.xlsx"
+                if os.path.isfile(wb_path):
+                    # load workbook
+                    wb = load_workbook(wb_path)
+                else:
+                    # create workbook
+                    sheet1 = wb.active
+                    sheet1.title = "Dataset1"
+                    sheet2 = wb.create_sheet(title="Dataset2")
+                    sheet3 = wb.create_sheet(title="Dataset3")
+                    sheet4 = wb.create_sheet(title="Dataset4")
+                    headers = ["Model_Name","Eval_Type","AUC","Sensitivity",\
+                    "Specificity","Precision"]
+                    sheet1.append(headers)
+                    sheet2.append(headers)
+                    sheet3.append(headers)
+                    sheet4.append(headers)
+                # get sheet to update
+                sheet = wb['Dataset{}'.format(ds)]
+                sheet.append([model_name,"INTERNAL" if trained_on_dataset==ds else "EXTERNAL",auc,sensitivity,specificity,precision])
+                wb.save(filename=wb_path)
 
