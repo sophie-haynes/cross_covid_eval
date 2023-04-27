@@ -23,7 +23,7 @@ from sklearn.metrics import confusion_matrix
 from preprocessing import calculate_weights,load_data, oversample_data
 
 # helper function to get data_path
-def set_train_data_path(test_dataset, flatten=False):
+def set_test_data_path(test_dataset, flatten=False):
     if flatten:
         if test_dataset == "1":
             test_data_path = "/content/drive/MyDrive/Paper3Logging/Datasets/dataset_1_flattened.zip"
@@ -34,8 +34,8 @@ def set_train_data_path(test_dataset, flatten=False):
         elif test_dataset == "4":
             test_data_path = "/content/drive/MyDrive/Paper3Logging/Datasets/dataset_4.zip"
         else:
-            raise ValueError("Invalid train dataset value")
-        return train_data_path
+            raise ValueError("Invalid test dataset value")
+        return test_data_path
     else:
         if test_dataset == "1":
             test_data_path = "/content/drive/MyDrive/Paper3Logging/Datasets/dataset_1.zip"
@@ -162,15 +162,18 @@ architecture = model_path.split("/")[-1].split("_")[0]
 model_name = model_path.split("/")[-1]
 model_name_dir = model_name.split(".h5")[0][:-2]
 
+trained_on_dataset = model_name_dir.split("_")[2]
+
 # load model
 model =keras.models.load_model(model_path)
 
-# fetch training data into environment
+# fetch  data into environment
 for ds in eval_datasets:
     # extract data locally
-    fetch_data(ds,set_train_data_path(ds,temp_flatten))
+    fetch_data(ds,set_test_data_path(ds,temp_flatten))
     # local verison path
     data_path = "dataset_{}".format(ds)
+    print("Evalating on {}".format(data_path))
     # ========================================================================================================
     # loading models 
 
@@ -220,31 +223,56 @@ for ds in eval_datasets:
           data_df.to_csv(data_pred_file,index=False)
 
         # calculate metrics
-        fpr,tpr,thresh = roc_curve(data_df['Labels'],data_df['Pred{}'.format(model_number)],drop_intermediate=False)
+        fpr,tpr,thresholds = roc_curve(data_df['Labels'],data_df['Pred{}'.format(model_number)],drop_intermediate=False)
         model_auc = auc(fpr,tpr)
-        print("Model AUC: {}".format(model_auc))
 
-        # 0.5<= thresh scores
+        # if internal eval, calc 98% metrics
+        if trained_on_dataset == ds:
+            # 98
+            print("Internal Evaluation")
+            covid_prob= data_df[data_df['Labels']==1]['Pred{}'.format(model_number)].array
+            non_prob= data_df[data_df['Labels']==0]['Pred{}'.format(model_number)].array
+            thresh = getSensitivityThresh(0.98,covid_prob, non_prob)
+        else:
+            # calc j stat for optimal thresh https://machinelearningmastery.com/threshold-moving-for-imbalanced-classification/
+            print("External Evaluation")
+            thresh = thresholds[np.argmax(tpr - fpr)]
         
+        cm = confusion_matrix(data_df['Labels'],data_df['Pred{}'.format(model_number)].apply(lambda x: 0 if x<=thresh else 1))
 
+        TP = cm[1][1]
+        TN = cm[0][0]
+        FP = cm[0][1]
+        FN = cm[1][0]
+
+        precision = TP/(TP+FP)
+        prec_samp = TP+FP
+        sensitivity = TP/(TP+FN)
+        specificity = TN/(TN+FP)
+
+        print("Model AUC: {}".format(model_auc))
+        print("Sens: {:.1f}% \nSpec: {:.1f}% \nPrec: {:.1f}%".format(\
+            sensitivity*100,specificity*100,precision*100))
 
         # export results
         wb_path = "drive/MyDrive/Paper3Logging/Models/Results.xlsx"
         if os.path.isfile(wb_path):
+            # load workbook
             wb = load_workbook(wb_path)
-            sheet = wb['Dataset{}'.format(ds)]
-            sheet.append([model_name,"dataset2",0.9,0.8,0.4,0.64])
-            wb.save(filename=wb_path)
         else:
-            sheet = wb.active
-            sheet.title = "Dataset1"
+            # create workbook
+            sheet1 = wb.active
+            sheet1.title = "Dataset1"
             sheet2 = wb.create_sheet(title="Dataset2")
             sheet3 = wb.create_sheet(title="Dataset3")
             sheet4 = wb.create_sheet(title="Dataset4")
-            headers = ["Model_Name","Trained_On","AUC","Sensitivity95","Specificity95",\
-            "Precision98","Sensitivity98","Specificity98","Precision98"]
-            sheet.append(headers)
+            headers = ["Model_Name","Eval_Type","AUC","Sensitivity",\
+            "Specificity","Precision"]
+            sheet1.append(headers)
             sheet2.append(headers)
             sheet3.append(headers)
             sheet4.append(headers)
-            wb.save(filename=wb_path)
+        # get sheet to update
+        sheet = wb['Dataset{}'.format(ds)]
+        sheet.append([model_name,"INTERNAL" if trained_on_dataset==ds else "EXTERNAL",auc,sensitivity,specificity,precision])
+        wb.save(filename=wb_path)
