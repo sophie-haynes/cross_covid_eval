@@ -92,7 +92,7 @@ def calcSensitivityThresh(targetSensitivity, covidProb,normalProb,sens98=0):
     thresh = thresh - Decimal(0.001)
     sens,spec = find_sens_spec( covidProb, normalProb,thresh)
   
-  print("sensitivity= %.3f, specificity= %.3f, threshold= %.3f" %(sens,spec,thresh))
+  print("Threshold = %.3f" %(thresh))
 
 def getSensitivityThresh(targetSensitivity, covidProb,normalProb,sens98=0):
   def find_sens_spec( covid_prob, noncovid_prob, thresh):
@@ -113,7 +113,7 @@ def getSensitivityThresh(targetSensitivity, covidProb,normalProb,sens98=0):
   if np.round(sens,3)!= targetSensitivity:
     thresh = thresh - 0.001
     sens,spec = find_sens_spec( covidProb, normalProb,thresh)
-  print("sensitivity= %.3f, specificity= %.3f, threshold= %.3f" %(sens,spec,thresh))
+  print("Threshold= %.3f" %(thresh))
   return thresh
 # ========================================================================================================
 # Set up base parameters
@@ -195,7 +195,7 @@ else:
         # local verison path
         data_path = "dataset_{}".format(ds)
         print("Evalating on {}".format(data_path))
-        
+
         # check if model needs preprocessing (from name)
         hist_eq = True if "_HE_" in model_name else False
 
@@ -205,25 +205,28 @@ else:
         # eval dataset
         preds = model.predict(test_x)
 
-        # Create folder for preds
-        preds_folder = os.path.join(model_path.split(model_name)[0],"Predictions")
-        os.makedirs(preds_folder, exist_ok=True)
         # get model number for preds number
         model_number =  model_name.split(".h5")[0][-1]
+
+        # Create folder for preds
+        preds_folder = os.path.join(model_path.split(model_name)[0],"Predictions")
+        if not no_export:
+            os.makedirs(preds_folder, exist_ok=True)
+        
         # dataset preds for this model on this dataset
         data_pred_file = os.path.join(preds_folder,data_path+".csv")
 
         if os.path.isfile(data_pred_file):
           data_df = pd.read_csv(data_pred_file)
           data_df['Pred{}'.format(model_number)] = preds.ravel()
-          data_df.to_csv(data_pred_file,index=False)
-            
         else:
           # create new csv for storing model meta data
           data_df = pd.DataFrame(columns=['Labels', 'Pred1', 'Pred2','Pred3'])
           data_df['Labels'] = test_y
           data_df['Pred{}'.format(model_number)] = preds.ravel()
-          data_df.to_csv(data_pred_file,index=False)
+
+        if not no_export:
+            data_df.to_csv(data_pred_file,index=False)
 
         # calculate metrics
         fpr,tpr,thresholds = roc_curve(data_df['Labels'],data_df['Pred{}'.format(model_number)],drop_intermediate=False)
@@ -253,7 +256,7 @@ else:
         sensitivity = TP/(TP+FN)
         specificity = TN/(TN+FP)
 
-        print("Model AUC: {}".format(model_auc))
+        print("AUC: {}".format(model_auc))
         print("Sens: {:.1f}% \nSpec: {:.1f}% \nPrec: {:.1f}%".format(\
             sensitivity*100,specificity*100,precision*100))
         if not no_export:
