@@ -22,6 +22,8 @@ from sklearn.metrics import confusion_matrix
 
 from preprocessing import calculate_weights,load_data, oversample_data
 
+from openpyxl import load_workbook, Workbook
+
 # helper function to get data_path
 def set_test_data_path(test_dataset, flatten=False):
     if flatten:
@@ -266,6 +268,7 @@ else:
                 # load workbook
                 wb = load_workbook(wb_path)
             else:
+                wb = Workbook()
                 # create workbook
                 sheet1 = wb.active
                 sheet1.title = "Dataset1"
