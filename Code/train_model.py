@@ -112,6 +112,8 @@ parser.add_argument('-ds4', '--dataset4', help='Use Dataset 4 - COVIDGR', action
 parser.add_argument('-cw','--class_weight', help='Use class weighting', action='store_true', default=False)
 parser.add_argument('-ov','--oversample', help='Use oversampling', action='store_true', default=False)
 parser.add_argument('-he','--hist_eq', help='Use histogram equalization', action='store_true', default=False)
+parser.add_argument('--no_export', help='Disable model exporting to drive', action='store_true', default=False)
+
 args = parser.parse_args()
 
 # ========================================================================================================
@@ -151,6 +153,7 @@ weights = args.weights
 class_weight = args.class_weight
 oversample = args.oversample
 hist_eq = args.hist_eq
+no_export = args.no_export
 
 augmented = False
 
@@ -270,12 +273,13 @@ else:
     train_x, train_y, train_paths = load_data(os.path.join(data_path,"train"),img_res,hist_eq)
     test_x,test_y, test_paths = load_data(os.path.join(data_path,"test"),img_res,hist_eq)
     
-    # Create folder for model/result storage
-    os.makedirs("/content/drive/MyDrive/Paper3Logging/Models/{}".format(data_path), exist_ok=True)
-    # create dataset subfolder
-    os.makedirs("/content/drive/MyDrive/Paper3Logging/Models/{}/{}".format(data_path,model_name), exist_ok=True)
-    # create preds folder
-    # os.makedirs("/content/drive/MyDrive/Paper3Logging/Models/{}/Predictions".format(model_name), exist_ok=True)
+    if not no_export:
+        # Create folder for model/result storage
+        os.makedirs("/content/drive/MyDrive/Paper3Logging/Models/{}".format(data_path), exist_ok=True)
+        # create dataset subfolder
+        os.makedirs("/content/drive/MyDrive/Paper3Logging/Models/{}/{}".format(data_path,model_name), exist_ok=True)
+        # create preds folder
+        # os.makedirs("/content/drive/MyDrive/Paper3Logging/Models/{}/Predictions".format(model_name), exist_ok=True)
 
     for i in range(3):
         if architecture == "conv4":
@@ -291,31 +295,36 @@ else:
             model.fit(train_x,train_y, validation_data=(test_x,test_y), epochs=epochs, batch_size=batch_size, callbacks=[es],class_weight=class_weight_value)
         else:
             model.fit(train_x,train_y, validation_data=(test_x,test_y), epochs=epochs, batch_size=batch_size, callbacks=[es])
-        model.save("drive/MyDrive/Paper3Logging/Models/{}/{}/{}_{}.h5".format(data_path,model_name,model_name, i+1))
-        print("drive/MyDrive/Paper3Logging/Models/{}/{}/{}_{}.h5".format(data_path,model_name,data_path,model_name, i+1))
+        if not no_export:
+            model.save("drive/MyDrive/Paper3Logging/Models/{}/{}/{}_{}.h5".format(data_path,model_name,model_name, i+1))
+            print("drive/MyDrive/Paper3Logging/Models/{}/{}/{}_{}.h5".format(data_path,model_name,data_path,model_name, i+1))
+        else:
+            model.save("{}_{}.h5".format(model_name, i+1))
+            print("Saved locally: {}_{}.h5".format(model_name, i+1))
 
         # export metadata
-        if os.path.isfile("/content/drive/MyDrive/Paper3Logging/Models/models_meta.csv"):
-          with open('/content/drive/MyDrive/Paper3Logging/Models/models_meta.csv', 'a') as csvfile:
-            filewriter = csv.writer(csvfile, delimiter=',',
-                                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            filewriter.writerow(["{}_{}.h5".format(model_name, i+1),img_res, learning_rate,\
-                                  momentum, epochs, batch_size,  \
-                                  weights, data_path, class_weight,\
-                                  oversample, augmented, hist_eq])
-            
-        else:
-          # create new csv for storing model meta data
-          with open('/content/drive/MyDrive/Paper3Logging/Models/models_meta.csv', 'a') as csvfile:
-            filewriter = csv.writer(csvfile, delimiter=',',
-                                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            filewriter.writerow(['Model_Name','Img_Res', 'Learning_Rate',\
-                                 'Momentum', 'Epochs', 'Batch_Size',  \
-                                 'Pre-training', 'Training_Data', 'Class_Weighted',\
-                                 'Oversampled', 'Data_Aug', 'Hist_Eq'])
-            filewriter.writerow(["{}_{}.h5".format(model_name, i+1),img_res, learning_rate,\
-                                  momentum, epochs, batch_size,  \
-                                  weights, data_path, class_weight,\
-                                  oversample, augmented, hist_eq])
+        if not no_export:
+            if os.path.isfile("/content/drive/MyDrive/Paper3Logging/Models/models_meta.csv"):
+              with open('/content/drive/MyDrive/Paper3Logging/Models/models_meta.csv', 'a') as csvfile:
+                filewriter = csv.writer(csvfile, delimiter=',',
+                                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                filewriter.writerow(["{}_{}.h5".format(model_name, i+1),img_res, learning_rate,\
+                                      momentum, epochs, batch_size,  \
+                                      weights, data_path, class_weight,\
+                                      oversample, augmented, hist_eq])
+                
+            else:
+              # create new csv for storing model meta data
+              with open('/content/drive/MyDrive/Paper3Logging/Models/models_meta.csv', 'a') as csvfile:
+                filewriter = csv.writer(csvfile, delimiter=',',
+                                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                filewriter.writerow(['Model_Name','Img_Res', 'Learning_Rate',\
+                                     'Momentum', 'Epochs', 'Batch_Size',  \
+                                     'Pre-training', 'Training_Data', 'Class_Weighted',\
+                                     'Oversampled', 'Data_Aug', 'Hist_Eq'])
+                filewriter.writerow(["{}_{}.h5".format(model_name, i+1),img_res, learning_rate,\
+                                      momentum, epochs, batch_size,  \
+                                      weights, data_path, class_weight,\
+                                      oversample, augmented, hist_eq])
 
 # print(f'Model name: {model_name}')
