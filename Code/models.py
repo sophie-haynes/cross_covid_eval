@@ -52,7 +52,8 @@ def densenet_tf(img_res,learning_rate, momentum,weights):
 		# check if this file is already loaded
 		if not os.path.isfile("cxr-8_dense_weights.h5"):
 			# create weights file 
-			shutil.copy("/content/drive/MyDrive/Datasets/cxr-8_dense_weights.h5","cxr-8_dense_weights.h5")
+			# shutil.copy("/content/drive/MyDrive/Datasets/cxr-8_dense_weights.h5","cxr-8_dense_weights.h5")
+			shutil.copy("/content/drive/MyDrive/Datasets/cxr-8/ultra_finetune_Binary_CXR8_Transfer_CW-Hist_50_2.h5","cxr-8_dense_weights.h5")
 
 		base_model = keras.applications.DenseNet121(weights=None, input_shape=(img_res,img_res,3), include_top=False)
 		# load manual weights from pretraining
