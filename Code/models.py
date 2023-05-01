@@ -87,7 +87,7 @@ def densenet_tf(img_res,learning_rate, momentum,weights):
 	else:
 		raise ValueError("Invalid weights passed to densenet. {} was not recognised.".format(weights))
 
-def densenet_tf_finetune(model,learning_rate, momentum,weights):
+def densenet_tf_finetune(model,learning_rate, momentum):
 	from tensorflow import keras
 	from keras import layers
 	from keras import models
