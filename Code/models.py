@@ -86,6 +86,24 @@ def densenet_tf(img_res,learning_rate, momentum,weights):
 
 	else:
 		raise ValueError("Invalid weights passed to densenet. {} was not recognised.".format(weights))
+
+def densenet_tf_finetune(model,learning_rate, momentum,weights):
+	from tensorflow import keras
+	from keras import layers
+	from keras import models
+	from keras.callbacks import EarlyStopping
+	from tensorflow.keras.preprocessing import image_dataset_from_directory
+	import shutil
+
+	model.trainable=True
+	es = EarlyStopping(monitor='val_loss', patience=30, restore_best_weights=True)
+	optimizer = keras.optimizers.SGD(learning_rate=learning_rate, momentum=momentum)
+	model.compile(optimizer=optimizer, loss=keras.losses.BinaryCrossentropy(from_logits=True), metrics=[\
+		keras.metrics.BinaryAccuracy(), \
+		keras.metrics.SensitivityAtSpecificity(0.98) \
+		])
+	return model,es
+	
 def darkcovidnet_torch():
 	pass
 

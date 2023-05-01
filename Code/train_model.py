@@ -302,6 +302,8 @@ else:
             model.save("{}_{}.h5".format(model_name, i+1))
             print("Saved locally: {}_{}.h5".format(model_name, i+1))
 
+        
+
         # export metadata
         if not no_export:
             if os.path.isfile("/content/drive/MyDrive/Paper3Logging/Models/models_meta.csv"):
@@ -324,6 +326,44 @@ else:
                                      'Oversampled', 'Data_Aug', 'Hist_Eq'])
                 filewriter.writerow(["{}_{}.h5".format(model_name, i+1),img_res, learning_rate,\
                                       momentum, epochs, batch_size,  \
+                                      weights, data_path, class_weight,\
+                                      oversample, augmented, hist_eq])
+
+        # finetune model
+        model, es = densenet_tf_finetune(model, 0.00001,momentum)
+        if class_weight_value:
+            model.fit(train_x,train_y,validation_data=(test_x,test_y), epochs=10,batch_size=batch_size,callbacks=[es],class_weight=class_weight_value)
+        else:
+            model.fit(train_x,train_y,validation_data=(test_x,test_y), epochs=10,batch_size=batch_size,callbacks=[es],)
+        if not no_export:
+            model.save("drive/MyDrive/Paper3Logging/Models/{}/{}/FT_{}_{}.h5".format(data_path,model_name,model_name, i+1))
+            print("drive/MyDrive/Paper3Logging/Models/{}/{}/FT_{}_{}.h5".format(data_path,model_name,data_path,model_name, i+1))
+        else:
+            model.save("FT_{}_{}.h5".format(model_name, i+1))
+            print("Saved locally: FT_{}_{}.h5".format(model_name, i+1))
+
+        # export metadata
+        if not no_export:
+            if os.path.isfile("/content/drive/MyDrive/Paper3Logging/Models/models_meta.csv"):
+              with open('/content/drive/MyDrive/Paper3Logging/Models/models_meta.csv', 'a') as csvfile:
+                filewriter = csv.writer(csvfile, delimiter=',',
+                                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                filewriter.writerow(["FT_{}_{}.h5".format(model_name, i+1),img_res, 0.00001,\
+                                      momentum, 10, batch_size,  \
+                                      weights, data_path, class_weight,\
+                                      oversample, augmented, hist_eq])
+                
+            else:
+              # create new csv for storing model meta data
+              with open('/content/drive/MyDrive/Paper3Logging/Models/models_meta.csv', 'a') as csvfile:
+                filewriter = csv.writer(csvfile, delimiter=',',
+                                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                filewriter.writerow(['Model_Name','Img_Res', 'Learning_Rate',\
+                                     'Momentum', 'Epochs', 'Batch_Size',  \
+                                     'Pre-training', 'Training_Data', 'Class_Weighted',\
+                                     'Oversampled', 'Data_Aug', 'Hist_Eq'])
+                filewriter.writerow(["FT_{}_{}.h5".format(model_name, i+1),img_res, 0.00001,\
+                                      momentum, 10, batch_size,  \
                                       weights, data_path, class_weight,\
                                       oversample, augmented, hist_eq])
 
